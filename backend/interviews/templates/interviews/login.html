@@ -1,0 +1,33 @@
+{% extends "interviews/base.html" %}{% load grit %}
+{% block title %}Sign in · GRIT Interviews{% endblock %}
+{% block content %}
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="card">
+      <span class="logo">GRIT</span>
+      <h1 style="margin-top:14px">Level Clearance Interviews</h1>
+      <p class="muted">Sign in to book, run or track interviews.</p>
+      <form method="post" style="display:grid;gap:10px;margin-top:14px">
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="form-errors">{{ form.non_field_errors.0 }}</div>{% endif %}
+        <label class="field"><span>Username</span>{{ form.username }}</label>
+        <label class="field"><span>Password</span>{{ form.password }}</label>
+        <input type="hidden" name="next" value="{{ request.GET.next }}">
+        <button class="btn primary lg" type="submit">Sign in</button>
+      </form>
+    </div>
+    {% if demo_accounts %}
+    <div class="card">
+      <div class="card-head"><h3>{% icon "sparkle" %} Demo accounts — one click</h3><span class="pill tone-warn">Demo mode</span></div>
+      <p class="muted small">Each account is in a different stage of the journey. Password for all: <code>grit-demo-2026</code></p>
+      {% for group, items in demo_accounts %}
+        <h3 class="section-title" style="font-size:13px">{{ group }}</h3>
+        <div class="persona-list">{% for uname, name, hint in items %}
+          <a href="{% url 'demo_login' uname %}">{% with n=name %}<span class="avatar sm">{{ n|initials }}</span>{% endwith %}<span><b>{{ name }}</b><small>{{ hint }}</small></span></a>
+        {% endfor %}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends "interviews/base.html" %}{% load grit %}
+{% block title %}Outcomes · GRIT{% endblock %}
+{% block content %}
+<div class="narrow wide">
+  <div class="page-head"><div><h1>Outcomes</h1><p class="muted">Every interview must have an outcome within {{ sla_h }}h — students are waiting.</p></div></div>
+  <div class="card"><div class="card-head"><h3>Pending ({{ pending|length }})</h3></div>
+    {% if pending %}<table class="tbl"><thead><tr><th>Student</th><th>Interview</th><th>Interviewer</th><th>SLA</th></tr></thead><tbody>
+      {% for p in pending %}<tr><td><div class="who"><span class="avatar sm">{{ p.iv.journey.student.name|initials }}</span><div><b>{{ p.iv.journey.student.name }}</b><small>{{ p.iv.journey.student.campus }}</small></div></div></td>
+        <td>{{ p.iv.start_at|ist_date }} {{ p.iv.start_at|ist_time }}</td><td>{{ p.iv.interviewer.name }}</td>
+        <td>{% if p.overdue %}<span class="pill tone-danger">Overdue</span>{% else %}<span class="pill tone-warn">Due {% rel p.due %}</span>{% endif %}</td></tr>{% endfor %}
+    </tbody></table>{% else %}<p class="muted">Nothing pending.</p>{% endif %}</div>
+  <div class="card"><div class="card-head"><h3>Recently recorded</h3></div>
+    <table class="tbl"><thead><tr><th>Student</th><th>Interview</th><th>Interviewer</th><th>Outcome</th><th>Feedback / note</th></tr></thead><tbody>
+      {% for i in recent %}<tr><td><div class="who"><span class="avatar sm">{{ i.journey.student.name|initials }}</span><div><b>{{ i.journey.student.name }}</b><small>{{ i.journey.student.campus }}</small></div></div></td>
+        <td>{{ i.start_at|ist_date }} {{ i.start_at|ist_time }}</td><td>{{ i.interviewer.name }}</td><td>{% outcome_pill i %}</td>
+        <td class="detail">{{ i.outcome.feedback_to_student|default:i.outcome.internal_notes }}</td></tr>{% endfor %}
+    </tbody></table></div>
+</div>
+{% endblock %}

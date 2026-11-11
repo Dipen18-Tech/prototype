@@ -1,0 +1,29 @@
+{% extends "interviews/base.html" %}{% load grit %}
+{% block title %}Home · GRIT{% endblock %}
+{% block content %}
+<div class="s-grid">
+  <div class="s-main">
+    <div class="greet"><h1>{{ c.greeting }}, {{ c.first_name }}</h1><p class="muted">{{ c.badge.track }} · {{ c.badge.level }}</p></div>
+    {% include "interviews/partials/hero.html" %}
+    {% include "interviews/partials/stepper.html" with steps=c.stepper %}
+    {% if demo_mode %}{% with st=c.journey.state %}{% if st == "LOCKED" or st == "SCHEDULED" or st == "RETAKE" or st == "FAILED" or st == "NO_SHOW" %}
+    <div class="demo-panel"><span class="demo-tag">Demo</span>
+      {% if st == "LOCKED" and c.first_missing %}{% with p=c.first_missing %}
+        <form method="post" action="{% url 'demo_clear_skill' %}" class="inline">{% csrf_token %}<input type="hidden" name="key" value="{{ p.key }}"><input type="hidden" name="level" value="{{ p.need }}"><button class="btn ghost sm">Simulate: clear {{ p.name }} L{{ p.need }}</button></form>
+      {% endwith %}{% endif %}
+      {% if st == "SCHEDULED" %}<span class="muted small">Switch to the interviewer (top bar) to record the outcome.</span>{% endif %}
+      {% if st == "RETAKE" or st == "FAILED" or st == "NO_SHOW" %}<form method="post" action="{% url 'demo_skip_cooldown' %}" class="inline">{% csrf_token %}<button class="btn ghost sm">Fast-forward to cooldown end</button></form>{% endif %}
+    </div>{% endif %}{% endwith %}{% endif %}
+    <div class="card"><div class="card-head"><h3>Skills for {{ c.badge.level }}</h3><span class="muted small">{{ c.skills_have }}/{{ c.skills_total }} cleared</span></div>
+      <ul class="skills">{% for p in c.progress %}<li class="{% if p.ok %}ok{% endif %}"><span class="tick">{% if p.ok %}{% icon "check" 12 %}{% endif %}</span><span>{{ p.name }}</span><span class="lvl">{% if p.ok %}L{{ p.have }}{% else %}L{{ p.have }} → <b>L{{ p.need }}</b>{% endif %}</span></li>{% endfor %}</ul></div>
+    {% if c.others %}<div class="card"><div class="card-head"><h3>Other badges</h3></div><ul class="mini-list">{% for o in c.others %}<li><a href="?journey={{ o.pk }}">{{ o.badge }}</a>{% pill o.state "student" %}</li>{% endfor %}</ul></div>{% endif %}
+  </div>
+  <aside class="s-side">
+    {% include "interviews/partials/status_card.html" %}
+    {% include "interviews/partials/badge_shelf.html" %}
+    <div class="card"><div class="card-head"><h3>{% icon "trend" %} Qualiflyer board</h3><span class="muted small">{{ c.qualiflyer_count }} Qualiflyers</span></div>
+      {% if c.leaderboard %}<ol class="lb">{% for r in c.leaderboard %}<li class="{% if r.student.pk == c.student.pk %}me{% endif %}"><span class="rk">#{{ r.rank }}</span><span class="avatar sm">{{ r.student.name|initials }}</span><span class="nm">{{ r.student.name }}{% if r.student.pk == c.student.pk %} (you){% endif %}</span><b>{{ r.miles|num }}</b></li>{% endfor %}</ol>{% endif %}
+      {% if not c.qualiflyer %}<p class="muted small lb-note">Earn your first badge to join the board.</p>{% endif %}</div>
+  </aside>
+</div>
+{% endblock %}

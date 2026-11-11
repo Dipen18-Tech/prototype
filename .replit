@@ -1,0 +1,13 @@
+modules = ["python-3.11"]
+run = "cd backend && pip install -q -r requirements.txt && python manage.py migrate --noinput && python manage.py collectstatic --noinput -v 0 && python manage.py seed_demo --if-empty && gunicorn grit.wsgi -b 0.0.0.0:8000 --workers 2"
+
+[nix]
+channel = "stable-24_05"
+
+[deployment]
+deploymentTarget = "gce"
+run = ["sh", "-c", "cd backend && pip install -q -r requirements.txt && python manage.py migrate --noinput && python manage.py collectstatic --noinput -v 0 && python manage.py seed_demo --if-empty && gunicorn grit.wsgi -b 0.0.0.0:8000 --workers 2"]
+
+[[ports]]
+localPort = 8000
+externalPort = 80

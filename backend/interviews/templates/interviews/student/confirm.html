@@ -1,0 +1,20 @@
+{% extends "interviews/base.html" %}{% load grit %}
+{% block title %}Confirm · GRIT{% endblock %}
+{% block content %}
+<div class="narrow">
+  <a href="{% url 'student_book' %}?day={{ start|ms }}{% if resched %}&amp;reschedule={{ resched.pk }}{% endif %}" class="back">{% icon "left" %} Pick another time</a>
+  <form method="post" class="confirm-card">
+    {% csrf_token %}
+    <h1>{% if resched %}Move your interview here?{% else %}Confirm your interview{% endif %}</h1>
+    <input type="hidden" name="start" value="{{ start_ms }}">
+    {% if resched %}<input type="hidden" name="reschedule" value="{{ resched.pk }}">{% endif %}
+    <div class="confirm-box">
+      <div>{% icon "calendar" 20 %}<div><b>{{ start|ist_long }}</b><span>{{ start|ist_time }} – {{ end|ist_time }} IST</span></div></div>
+      <div>{% icon "award" 20 %}<div><b>{{ c.badge.track }} · {{ c.badge.level }}</b><span>Attempt {{ c.journey.attempts_used|add:1 }} of {{ c.journey.max_attempts }} · online video call</span></div></div>
+      {% if resched %}<div>{% icon "refresh" 20 %}<div><b>Moving from {{ resched.start_at|ist_date }}, {{ resched.start_at|ist_time }}</b><span>Your interviewer may change.</span></div></div>{% endif %}
+    </div>
+    {% if not resched %}<label class="check"><input type="checkbox" name="ack" required> I'll join on time from a laptop with camera and mic, and I understand a missed interview blocks booking for 3 days.</label>{% endif %}
+    <div class="actions"><a class="btn ghost" href="{% url 'student_book' %}{% if resched %}?reschedule={{ resched.pk }}{% endif %}">Back</a><button class="btn primary" type="submit">{% if resched %}Move my interview{% else %}Confirm booking{% endif %}</button></div>
+  </form>
+</div>
+{% endblock %}

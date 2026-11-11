@@ -1,0 +1,30 @@
+<svg class="state-diagram" viewBox="0 0 900 335" role="img" aria-label="Student interview journey state diagram">
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="sd-head"/></marker></defs>
+  <g class="sd-edges" marker-end="url(#ah)">
+    <path d="M134 160H186"/><path d="M314 152H366"/><path d="M366 170H318"/>
+    <path d="M418 140C405 100 470 100 458 140"/>
+    <path d="M494 160H546"/><path d="M674 160H756"/>
+    <path d="M612 180L398 258"/><path d="M612 180L534 258"/><path d="M612 180L672 258"/>
+    <path d="M734 280H766"/>
+    <path d="M250 315V184"/>
+    <path class="dash" d="M440 40H546"/><path class="dash" d="M674 40H756"/>
+  </g>
+  <g class="sd-edges"><path d="M392 300V315H672V300M532 300V315M392 315H250"/></g>
+  {% for id, label, x, y, tone in nodes %}
+  <g class="sd-node tone-{{ tone }}"><rect x="{{ x }}" y="{{ y }}" width="124" height="40" rx="9"/><text x="{{ x|add:62 }}" y="{{ y|add:18 }}" class="t1">{{ label }}</text><text x="{{ x|add:62 }}" y="{{ y|add:32 }}" class="t2">{{ id }}</text></g>
+  {% endfor %}
+  <g class="sd-lbls">
+    <text x="160" y="152" class="sd-lbl" text-anchor="middle">skills</text><text x="160" y="180" class="sd-lbl" text-anchor="middle">cleared</text>
+    <text x="340" y="145" class="sd-lbl" text-anchor="middle">book</text>
+    <text x="342" y="190" class="sd-lbl" text-anchor="middle">cancel /</text><text x="342" y="202" class="sd-lbl" text-anchor="middle">tech issue</text>
+    <text x="438" y="96" class="sd-lbl" text-anchor="middle">reschedule ≤2</text>
+    <text x="520" y="152" class="sd-lbl" text-anchor="middle">slot</text><text x="520" y="180" class="sd-lbl" text-anchor="middle">ends</text>
+    <text x="715" y="152" class="sd-lbl" text-anchor="middle">pass</text>
+    <text x="650" y="212" class="sd-lbl" text-anchor="start">record outcome</text>
+    <text x="752" y="254" class="sd-lbl" text-anchor="middle">3rd non-pass</text>
+    <text x="258" y="250" class="sd-lbl" text-anchor="start">cooldown ends</text><text x="258" y="262" class="sd-lbl" text-anchor="start">3 / 7 / 21 days</text>
+    <text x="436" y="34" class="sd-lbl" text-anchor="end">flag raised</text><text x="436" y="47" class="sd-lbl" text-anchor="end">(any active state)</text>
+    <text x="715" y="34" class="sd-lbl" text-anchor="middle">confirmed</text>
+    <text x="612" y="78" class="sd-lbl" text-anchor="middle">dismissed → restore previous</text>
+  </g>
+</svg>

@@ -1,0 +1,29 @@
+{% extends "interviews/base.html" %}{% load grit %}
+{% block title %}Book your interview · GRIT{% endblock %}
+{% block content %}
+<div class="narrow">
+  <a href="{% if resched %}{% url 'student_interview' %}{% else %}{% url 'student_home' %}{% endif %}" class="back">{% icon "left" %} Back</a>
+  <h1>{% if resched %}Reschedule your interview{% else %}Book your Level Clearance Interview{% endif %}</h1>
+  <p class="muted">{{ c.badge.track }} · {{ c.badge.level }} · 30 min · online video call · all times IST</p>
+  {% if resched %}<div class="callout info">{% icon "clock" %} <span>Current slot: <b>{{ resched.start_at|ist_date }}, {{ resched.start_at|ist_time }}</b>. Reschedules left after this: {{ resched_left_after }}.</span></div>{% endif %}
+  {% if c.journey.priority and not resched %}<div class="callout warn">{% icon "star" %} <span><b>Priority booking:</b> your last interview was cancelled on our side, so you can book slots from 2 hours from now.</span></div>{% endif %}
+
+  <nav class="date-strip" aria-label="Choose a date">
+    {% for d in days %}{% day_label d.day as dl %}<a class="date-chip {% if d.day == selected %}on{% endif %} {% if not d.n %}disabled{% endif %}" {% if d.n %}href="?day={{ d.ms }}{% if resched %}&amp;reschedule={{ resched.pk }}{% endif %}"{% else %}aria-disabled="true"{% endif %} {% if d.day == selected %}aria-current="date"{% endif %}>
+      <small>{% if dl == "Today" %}Today{% elif dl == "Tomorrow" %}Tmrw{% else %}{{ d.day|ist_dow }}{% endif %}</small><b>{{ d.day|ist_day }}</b>
+      <span class="{% if d.few %}few{% endif %}">{% if d.n %}{% if d.few %}{{ d.n }} left{% else %}{{ d.n }} slots{% endif %}{% else %}—{% endif %}</span></a>{% endfor %}
+  </nav>
+
+  {% if not any_slots %}
+    <div class="empty">{% icon "calendar" 28 %}<h3>No slots open in the next 14 days</h3><p class="muted">Interviewers add availability every week. We'll notify you as soon as new slots open.</p></div>
+  {% else %}
+    <h3 class="day-title">{{ selected|ist_long }}</h3>
+    {% for label, items in groups %}
+      <div class="slot-group"><span class="muted small">{{ label }}</span>
+        <div class="slots">{% for t in items %}<a class="slot" href="{% url 'student_confirm' %}?start={{ t.start|ms }}{% if resched %}&amp;reschedule={{ resched.pk }}{% endif %}">{{ t.start|ist_time }}</a>{% endfor %}</div>
+      </div>
+    {% endfor %}
+  {% endif %}
+  <div class="policy">{% icon "file" %} <span>You can reschedule twice and cancel up to 4 hours before. Missing the interview blocks booking for 3 days.</span></div>
+</div>
+{% endblock %}

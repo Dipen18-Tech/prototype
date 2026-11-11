@@ -1,0 +1,77 @@
+{% load static grit %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}GRIT Interviews{% endblock %}</title>
+  <meta name="description" content="GRIT Level Clearance Interview scheduling — booking, interviewer schedules, outcomes and ops tracking.">
+  {% if auto_refresh %}<meta http-equiv="refresh" content="60">{% endif %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'interviews/app.css' %}">
+</head>
+<body>
+{% if user.is_authenticated %}
+  {% if demo_mode %}
+  <div class="demo-bar">
+    <div class="db-left">
+      <span class="db-title">{% icon "plane" 16 %} GRIT Interview Scheduling <em>demo</em></span>
+      <form method="get" action="{% url 'demo_switch' %}" class="switch">
+        <label for="switch-user" class="small">Signed in as</label>
+        <select id="switch-user" name="username">
+          {% for group, items in switch_groups %}<optgroup label="{{ group }}">
+            {% for uname, label in items %}<option value="{{ uname }}" {% if uname == me_username %}selected{% endif %}>{{ label }}</option>{% endfor %}
+          </optgroup>{% endfor %}
+        </select>
+        <button type="submit">Switch</button>
+      </form>
+    </div>
+    <div class="db-right">
+      <form method="post" action="{% url 'demo_clock' %}" class="clock" title="Simulated clock — move time forward to see cooldowns, SLAs and join windows change">
+        {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+        {% icon "clock" 14 %} <b>{{ now|ist_date }}, {{ now|ist_time }}</b>
+        <button name="seconds" value="3600">+1h</button><button name="seconds" value="86400">+1d</button><button name="seconds" value="604800">+7d</button>
+      </form>
+      <form method="post" action="{% url 'demo_reset' %}">{% csrf_token %}<button class="reset" title="Restore demo data">{% icon "refresh" 14 %} Reset</button></form>
+    </div>
+  </div>
+  {% endif %}
+
+  <header class="app-head">
+    <div class="brand"><span class="logo">GRIT</span><span class="muted small">{% if role == "student" %}Student{% elif role == "interviewer" %}Interviewer{% elif role == "ops" %}Interview Ops{% endif %}</span></div>
+    <nav aria-label="Main">
+      {% if role == "student" %}
+        <a href="{% url 'student_home' %}" class="snav {% if nav == 'home' %}on{% endif %}">{% icon "home" %} Home</a>
+        <a href="{% url 'student_interview' %}" class="snav {% if nav == 'interview' %}on{% endif %}">{% icon "video" %} My interview</a>
+        <a href="{% url 'student_inbox' %}" class="snav {% if nav == 'inbox' %}on{% endif %}">{% icon "bell" %} Inbox{% if nav_counts.inbox %}<span class="count">{{ nav_counts.inbox }}</span>{% endif %}</a>
+      {% elif role == "interviewer" %}
+        <a href="{% url 'iv_today' %}" class="snav {% if nav == 'schedule' %}on{% endif %}">{% icon "list" %} Schedule{% if nav_counts.schedule %}<span class="count warn">{{ nav_counts.schedule }}</span>{% endif %}</a>
+        <a href="{% url 'iv_availability' %}" class="snav {% if nav == 'availability' %}on{% endif %}">{% icon "calendar" %} Availability</a>
+      {% elif role == "ops" %}
+        <a href="{% url 'ops_overview' %}" class="snav {% if nav == 'overview' %}on{% endif %}">{% icon "grid" %} Overview</a>
+        <a href="{% url 'ops_tracker' %}" class="snav {% if nav == 'tracker' %}on{% endif %}">{% icon "users" %} Booking tracker</a>
+        <a href="{% url 'ops_outcomes' %}" class="snav {% if nav == 'outcomes' %}on{% endif %}">{% icon "check" %} Outcomes{% if nav_counts.outcomes %}<span class="count warn">{{ nav_counts.outcomes }}</span>{% endif %}</a>
+        <a href="{% url 'ops_integrity' %}" class="snav {% if nav == 'integrity' %}on{% endif %}">{% icon "shield" %} Integrity{% if nav_counts.integrity %}<span class="count">{{ nav_counts.integrity }}</span>{% endif %}</a>
+        <a href="{% url 'ops_audit' %}" class="snav {% if nav == 'audit' %}on{% endif %}">{% icon "file" %} Audit log</a>
+      {% endif %}
+      <a href="{% url 'compare' %}" class="snav ext {% if nav == 'compare' %}on{% endif %}">{% icon "compare" %} Before / After</a>
+      <a href="{% url 'how_it_works' %}" class="snav ext {% if nav == 'spec' %}on{% endif %}">{% icon "file" %} How it works</a>
+    </nav>
+    <div class="me">
+      <span class="avatar" aria-hidden="true">{{ me_name|initials }}</span>
+      <div><b>{{ me_name }}</b><small>{{ me_sub }}</small></div>
+      <form method="post" action="{% url 'logout' %}" class="inline">{% csrf_token %}<button class="logout" title="Sign out">{% icon "logout" 14 %}<span class="sr-only">Sign out</span></button></form>
+    </div>
+  </header>
+{% endif %}
+
+<main class="s-body">{% block content %}{% endblock %}</main>
+
+{% if messages %}
+<div class="toast-root" role="status">
+  {% for m in messages %}<div class="toast tone-{{ m.tags }}">{% if m.tags == "error" %}{% icon "alert" %}{% else %}{% icon "check" %}{% endif %}<span>{{ m }}</span></div>{% endfor %}
+</div>
+{% endif %}
+</body>
+</html>

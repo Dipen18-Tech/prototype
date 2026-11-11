@@ -1,0 +1,38 @@
+{% extends "interviews/base.html" %}{% load grit %}
+{% block title %}Booking tracker · GRIT{% endblock %}
+{% block content %}
+<div class="narrow wide">
+  <div class="page-head"><div><h1>Booking tracker</h1><p class="muted">Who's eligible, who has booked, who hasn't — one row per student per badge.</p></div>
+    <a class="btn ghost sm" href="{% url 'ops_export' %}">{% icon "file" %} Export CSV</a></div>
+  <div class="filters">
+    <div class="chips">{% for k, label, n in groups %}<a class="chip-btn {% if filter == k %}on{% endif %}" href="?filter={{ k }}{% if q %}&amp;q={{ q|urlencode }}{% endif %}{% if campus %}&amp;campus={{ campus|urlencode }}{% endif %}" style="text-decoration:none">{{ label }} <span>{{ n }}</span></a>{% endfor %}</div>
+    <form method="get" class="filter-row">
+      <input type="hidden" name="filter" value="{{ filter }}">
+      <input type="search" name="q" value="{{ q }}" placeholder="Search name or roll no." aria-label="Search students">
+      <select name="campus" aria-label="Campus"><option value="">All campuses</option>{% for cp in campuses %}<option {% if cp == campus %}selected{% endif %}>{{ cp }}</option>{% endfor %}</select>
+      <button class="btn ghost sm" type="submit">Apply</button>
+    </form>
+  </div>
+
+  <form method="post" id="nudge-form">{% csrf_token %}<input type="hidden" name="next" value="{{ now_path }}">
+    {% if selectable %}<div class="filter-row" style="margin-bottom:8px"><button class="btn primary sm" name="action" value="nudge_selected">{% icon "send" %} Nudge selected</button><span class="muted small">Tick the students to remind about booking.</span></div>{% endif %}
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th class="cb"></th><th>Student</th><th>Campus</th><th>Badge</th><th>Status</th><th>Detail</th><th>Attempts</th><th></th></tr></thead>
+      <tbody>{% for r in rows %}
+        <tr class="{% if r.risk %}risk-{{ r.risk }}{% endif %}">
+          <td class="cb">{% if r.j.state == "ELIGIBLE" %}<input type="checkbox" name="journey" value="{{ r.j.pk }}" aria-label="Select {{ r.s.name }}">{% endif %}</td>
+          <td><div class="who"><span class="avatar sm">{{ r.s.name|initials }}</span><div><b>{{ r.s.name }}</b><small>{{ r.s.roll_no }}</small></div></div></td>
+          <td>{{ r.s.campus }}</td><td>{{ r.b }}</td><td>{% pill r.j.state %}</td>
+          <td class="detail">{{ r.detail }}{% if r.risk == "overdue" %} <span class="pill tone-danger">SLA</span>{% endif %}{% if r.risk == "deadline" %} <span class="pill tone-danger">after deadline</span>{% endif %}</td>
+          <td>{% if r.j.state == "LOCKED" %}—{% else %}{{ r.j.attempts_used }}/{{ r.j.max_attempts }}{% endif %}</td>
+          <td class="row-acts">
+            {% if r.j.state == "SCHEDULED" and r.iv %}<a class="btn ghost xs" href="{% url 'iv_release' r.iv.pk %}">Release</a>{% endif %}
+            {% if r.j.state == "CLOSED" %}<button class="btn ghost xs" formaction="{% url 'ops_extra_attempt' r.j.pk %}">+1 attempt</button>{% endif %}
+            {% if r.j.state in flaggable %}<a class="btn ghost xs danger" href="{% url 'ops_flag_new' %}?journey={{ r.j.pk }}" title="Raise integrity flag">{% icon "flag" 12 %}</a>{% endif %}
+          </td>
+        </tr>
+      {% empty %}<tr><td colspan="8" class="empty-row">No students match these filters.</td></tr>{% endfor %}</tbody>
+    </table></div>
+  </form>
+</div>
+{% endblock %}

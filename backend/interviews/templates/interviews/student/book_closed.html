@@ -1,0 +1,2 @@
+{% extends "interviews/base.html" %}{% load grit %}
+{% block content %}<div class="narrow"><div class="empty">{% icon "calendar" 28 %}<h2>Booking isn't open right now</h2><p class="muted">Status: {{ c.journey.state|state_student }}.</p><a class="btn primary" href="{% url 'student_home' %}">Back to home</a></div></div>{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "interviews/base.html" %}{% load grit %}
+{% block content %}
+<div class="narrow">
+  <form method="post" class="confirm-card">{% csrf_token %}
+    <input type="hidden" name="day" value="{{ day_ms }}">
+    <h1>Block {{ day|ist_long }}?</h1>
+    <p>All your open slots on this day will be removed.{% if bookings %} <b>{{ bookings }} student{{ bookings|pluralize:" is,s are" }} booked</b> — we'll move each to a free colleague at the same time, or cancel with priority rebooking if nobody is free.{% endif %}</p>
+    <div class="actions"><a class="btn ghost" href="{% url 'iv_availability' %}">Back</a><button class="btn danger" type="submit">Block day</button></div>
+  </form>
+</div>
+{% endblock %}

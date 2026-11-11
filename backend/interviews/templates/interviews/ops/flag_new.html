@@ -1,0 +1,13 @@
+{% extends "interviews/base.html" %}{% load grit %}
+{% block content %}
+<div class="narrow">
+  <a href="{% url 'ops_integrity' %}" class="back">{% icon "left" %} Integrity</a>
+  <form method="post" class="confirm-card">{% csrf_token %}
+    <h1>Raise an integrity flag</h1>
+    <label class="field"><span>{{ form.journey.label }}</span>{{ form.journey }}{{ form.journey.errors }}</label>
+    <label class="field"><span>{{ form.reason.label }}</span>{{ form.reason }}{{ form.reason.errors }}</label>
+    <p class="callout warn small">{% icon "alert" %} The student is notified their journey is on hold. Any booking is released immediately.</p>
+    <div class="actions"><a class="btn ghost" href="{% url 'ops_integrity' %}">Cancel</a><button class="btn danger" type="submit">Raise flag</button></div>
+  </form>
+</div>
+{% endblock %}

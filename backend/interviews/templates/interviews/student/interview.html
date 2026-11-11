@@ -1,0 +1,48 @@
+{% extends "interviews/base.html" %}{% load grit %}
+{% block title %}My interview · GRIT{% endblock %}
+{% block content %}
+<div class="narrow">
+  <h1>My interview</h1>
+  <p class="muted">{{ c.badge.track }} · {{ c.badge.level }}</p>
+  {% if c.iv and c.journey.state == "SCHEDULED" %}{% with iv=c.iv %}
+    <div class="pass">
+      <div class="pass-main">
+        <div class="pass-top"><span class="logo">GRIT</span><span class="muted small">LEVEL CLEARANCE INTERVIEW</span></div>
+        <div class="route"><div><small>FROM</small><b>Skills</b><span>{{ c.skills_total }}/{{ c.skills_total }} cleared</span></div><div class="flight">{% icon "plane" 22 %}</div><div class="r"><small>TO</small><b>{{ c.badge.level }}</b><span>{{ c.badge.track }}</span></div></div>
+        <div class="pass-grid">
+          <div><small>PASSENGER</small><b>{{ c.student.name }}</b></div>
+          <div><small>DATE</small><b>{{ iv.start_at|ist_date }}</b></div>
+          <div><small>TIME (IST)</small><b>{{ iv.start_at|ist_time }}</b></div>
+          <div><small>BOARDING</small><b>10 min before</b></div>
+          <div><small>INTERVIEWER</small><b>{{ iv.interviewer.name }}</b></div>
+          <div><small>ATTEMPT</small><b>{{ iv.attempt_no }} of {{ c.journey.max_attempts }}</b></div>
+        </div>
+      </div>
+      <div class="pass-stub">
+        <small>STATUS</small><b>{% if c.join_open %}Boarding{% else %}Confirmed{% endif %}</b>
+        {% if c.join_open %}<a class="btn success" href="{% url 'student_join' iv.pk %}">{% icon "video" %} Join</a><small class="muted">Room is open</small>
+        {% else %}<span class="btn primary" style="opacity:.45" aria-disabled="true">{% icon "video" %} Join</span><small class="muted">Starts {% rel iv.start_at %}</small>{% endif %}
+      </div>
+    </div>
+    <div class="row-actions">
+      {% if c.can_change and iv.reschedule_count < 2 %}<a class="btn ghost" href="{% url 'student_book' %}?reschedule={{ iv.pk }}">{% icon "refresh" %} Reschedule</a>{% endif %}
+      {% if c.can_change %}<a class="btn ghost danger" href="{% url 'student_cancel' iv.pk %}">Cancel booking</a>
+      {% else %}<span class="muted small">Changes closed — it's within 4h of your interview.</span>{% endif %}
+      {% if iv.reschedule_count %}<span class="muted small">Rescheduled {{ iv.reschedule_count }} of 2 times.</span>{% endif %}
+    </div>
+    <div class="card"><div class="card-head"><h3>Before you join</h3></div>
+      <ul class="checklist"><li>{% icon "check" 14 %} Laptop with a working camera and mic, charged</li><li>{% icon "check" 14 %} College ID card ready to show</li><li>{% icon "check" 14 %} Your Gen AI and UI projects open — you'll walk through one</li><li>{% icon "check" 14 %} A quiet room; join 5 minutes early</li></ul></div>
+  {% endwith %}{% else %}
+    {% include "interviews/partials/hero.html" %}
+  {% endif %}
+
+  {% if past %}<h3 class="section-title">History</h3>
+    {% for h in past %}<div class="card history">
+      <div class="card-head"><div><b>{{ h.start_at|ist_date }}, {{ h.start_at|ist_time }}</b><span class="muted small"> · {{ h.interviewer.name }} · Attempt {{ h.attempt_no }}</span></div>{% outcome_pill h %}</div>
+      {% if h.outcome.scores %}<div class="rubric">{% for key, label in rubric %}{% with v=h.outcome.scores|get:key %}<div class="rubric-row"><span>{{ label }}</span><div class="bar"><i style="width:{{ v|pct:4 }}%" class="{% if v <= 2 %}low{% endif %}"></i></div><b>{{ v }}/4</b></div>{% endwith %}{% endfor %}</div>{% endif %}
+      {% if h.outcome.feedback_to_student %}<blockquote>“{{ h.outcome.feedback_to_student }}”</blockquote>{% endif %}
+      {% if h.status == "cancelled" %}<p class="muted small">{{ h.cancel_reason|default:"Cancelled" }}</p>{% endif %}
+    </div>{% endfor %}
+  {% endif %}
+</div>
+{% endblock %}

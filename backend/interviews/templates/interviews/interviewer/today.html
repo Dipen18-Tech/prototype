@@ -1,0 +1,51 @@
+{% extends "interviews/base.html" %}{% load grit %}
+{% block title %}Schedule · GRIT{% endblock %}
+{% block content %}
+<div class="narrow wide">
+  <div class="page-head">
+    <div>{% day_label day as dl %}<h1>{{ dl }}'s schedule</h1><p class="muted">{{ day|ist_long }}</p></div>
+    <div class="date-nav">
+      <a class="icon-btn" href="?day={{ prev_day }}" aria-label="Previous day">{% icon "left" %}</a>
+      <a class="btn ghost sm" href="{% url 'iv_today' %}">Today</a>
+      <a class="icon-btn" href="?day={{ next_day }}" aria-label="Next day">{% icon "right" %}</a>
+    </div>
+  </div>
+  <div class="kpis small-kpis">
+    <div class="kpi"><span>Interviews</span><b>{{ booked }}</b><small>cap {{ me.max_per_day }}/day</small></div>
+    <div class="kpi"><span>Need outcome</span><b class="{% if pending %}warn-text{% endif %}">{{ pending|length }}</b><small>record within 24h</small></div>
+    <div class="kpi"><span>Open slots</span><b>{{ open_count }}</b><small>on this day</small></div>
+  </div>
+  {% if pending_other %}<div class="callout warn">{% icon "alert" %} <span>Outcomes pending from other days: {% for p in pending_other %}<a href="{% url 'iv_outcome' p.pk %}">{{ p.journey.student.name }} ({{ p.start_at|ist_date }})</a>{% if not forloop.last %}, {% endif %}{% endfor %}</span></div>{% endif %}
+
+  <div class="agenda">
+  {% for x in timeline %}
+    {% if x.slot %}
+      <div class="agenda-item open"><div class="agenda-time"><b>{{ x.slot.start_at|ist_time }}</b><small>{{ x.slot.end_at|ist_time }}</small></div><div class="agenda-body muted">Open slot — not booked yet</div></div>
+    {% else %}{% with i=x.iv s=x.iv.journey.student j=x.iv.journey %}
+      <div class="agenda-item {% if i.status != 'scheduled' %}done{% endif %} {% if x.live and i.status == 'scheduled' %}is-live{% endif %}">
+        <div class="agenda-time"><b>{{ i.start_at|ist_time }}</b><small>{{ i.end_at|ist_time }}</small></div>
+        <div class="agenda-body">
+          <div class="agenda-who"><span class="avatar">{{ s.name|initials }}</span><div><b>{{ s.name }}</b><small>{{ s.roll_no }} · {{ s.campus }} · {{ s.batch }} batch</small></div></div>
+          <div class="agenda-meta"><span class="chip">{{ j.badge }}</span><span class="chip">Attempt {{ i.attempt_no }}/{{ j.max_attempts }}</span>{% if j.no_shows %}<span class="chip warn">{{ j.no_shows }} prior no-show</span>{% endif %}</div>
+          {% if x.prev %}<details class="prev"><summary>{{ x.prev|length }} previous attempt{{ x.prev|length|pluralize }} — read before the call</summary>
+            {% for p in x.prev %}<p><b>{{ p.start_at|ist_date }}</b> · {% outcome_pill p %} · {{ p.outcome.recorded_by_name }}{% if p.outcome.feedback_to_student %}<br>“{{ p.outcome.feedback_to_student }}”{% endif %}</p>{% endfor %}</details>{% endif %}
+          {% if i.status != "scheduled" and i.outcome.feedback_to_student %}<p class="muted small">“{{ i.outcome.feedback_to_student }}”</p>{% endif %}
+        </div>
+        <div class="agenda-side">
+          {% if i.status == "scheduled" %}
+            {% if x.overdue %}<span class="pill tone-danger">Outcome overdue</span>{% elif x.live %}<span class="pill tone-success live">● Live</span>{% elif x.started %}<span class="pill tone-warn">Needs outcome</span>{% else %}<span class="pill tone-primary">{% rel i.start_at %}</span>{% endif %}
+            <div class="agenda-actions">
+              {% if x.live %}<a class="btn success sm" href="{{ i.meet_link }}" target="_blank" rel="noopener">{% icon "video" %} Join</a>{% endif %}
+              {% if x.started %}<a class="btn primary sm" href="{% url 'iv_outcome' i.pk %}">Record outcome</a>
+              {% elif not x.live %}<a class="btn ghost sm" href="{% url 'iv_release' i.pk %}">Can't make it</a>{% endif %}
+            </div>
+          {% else %}{% outcome_pill i %}{% endif %}
+        </div>
+      </div>
+    {% endwith %}{% endif %}
+  {% empty %}
+    <div class="empty">{% icon "calendar" 28 %}<p class="muted">Nothing on this day. Add availability so students can book.</p><a class="btn ghost" href="{% url 'iv_availability' %}">Manage availability</a></div>
+  {% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,1 @@
+{% load grit %}<span class="attempts"><span class="dots" title="{{ used }} of {{ max }} attempts used">{% for i in max|times %}<i class="{% if i < used %}on{% endif %}"></i>{% endfor %}</span><span class="muted small">{{ used }}/{{ max }} attempts used</span></span>

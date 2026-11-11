@@ -1,0 +1,94 @@
+{% load grit %}{% with j=c.journey b=c.badge o=c.last_outcome %}
+{% if j.state == "LOCKED" %}
+<section class="hero tone-muted">
+  <div class="hero-top"><span class="eyebrow">{% icon "lock" 14 %} {{ b.track }} · {{ b.level }}</span>{% pill j.state "student" %}</div>
+  <h2>{{ c.skills_have }} of {{ c.progress|length }} skills cleared</h2>
+  <p>Clear {% for p in c.progress %}{% if not p.ok %}<b>{{ p.name }} L{{ p.need }}</b>{% if not forloop.last %}, {% endif %}{% endif %}{% endfor %} to unlock your Level Clearance Interview.</p>
+  <div class="progress"><i style="width:{{ c.skills_have|pct:c.skills_total }}%"></i></div>
+</section>
+
+{% elif j.state == "ELIGIBLE" %}
+<section class="hero tone-info">
+  <div class="hero-top"><span class="eyebrow">{% icon "sparkle" 14 %} {{ b.track }} · {{ b.level }}</span>{% if j.priority %}<span class="pill tone-warn">Priority booking</span>{% else %}{% pill j.state "student" %}{% endif %}</div>
+  <h2>{% if j.attempts_used %}Your next attempt is unlocked{% else %}You've unlocked your Level Clearance Interview{% endif %}</h2>
+  <p>One 30-minute online interview stands between you and your {{ b.level }} badge and <b>+{{ b.miles }} Miles</b>.</p>
+  <div class="hero-stats">
+    <div><b>{{ c.days_left }}</b><span>days to the {{ c.deadline|short_date }} deadline</span></div>
+    <div><b>{{ c.seats_week }}</b><span>slots open this week</span></div>
+    <div><b>{{ c.attempts_left }}</b><span>attempts left</span></div>
+  </div>
+  <div class="hero-cta">{% if c.demo %}<span class="btn primary lg fake">{% icon "calendar" %} Book my interview</span>{% else %}<a class="btn primary lg" href="{% url 'student_book' %}">{% icon "calendar" %} Book my interview</a>{% endif %}</div>
+</section>
+
+{% elif j.state == "SCHEDULED" %}
+<section class="hero tone-primary">
+  <div class="hero-top"><span class="eyebrow">{% icon "plane" 14 %} {{ b.track }} · {{ b.level }}</span>{% if c.join_open %}<span class="pill tone-success live">● Live now</span>{% else %}{% pill j.state "student" %}{% endif %}</div>
+  <h2>{% day_label c.iv.start_at %}, {{ c.iv.start_at|ist_time }}</h2>
+  <p>30 min with <b>{{ c.iv.interviewer.name }}</b> · {% if c.join_open %}Your interviewer is ready — join now.{% else %}Starts {% rel c.iv.start_at %}. The Join button goes live 10 min before.{% endif %}</p>
+  <div class="hero-cta">
+    {% if c.join_open %}<a class="btn success lg" href="{% url 'student_join' c.iv.pk %}">{% icon "video" %} Join interview</a>{% else %}<span class="btn primary lg" aria-disabled="true" style="opacity:.45">{% icon "video" %} Join interview</span>{% endif %}
+    <a class="btn ghost" href="{% url 'student_interview' %}">View details</a>
+  </div>
+</section>
+
+{% elif j.state == "AWAITING_RESULT" %}
+<section class="hero tone-warn">
+  <div class="hero-top"><span class="eyebrow">{% icon "clock" 14 %} {{ b.track }} · {{ b.level }}</span>{% pill j.state "student" %}</div>
+  <h2>Interview done — your result is on its way</h2>
+  <p>Your interviewer will share the outcome within 24 hours. We'll notify you the moment it's in.</p>
+</section>
+
+{% elif j.state == "PASSED" %}
+<section class="hero tone-success celebrate">
+  <div class="medal">{% icon "award" 40 %}</div>
+  <div class="hero-top"><span class="eyebrow">Level Clearance Interview · cleared</span>{% pill j.state "student" %}</div>
+  <h2>{{ b.track }} · {{ b.level }} badge earned</h2>
+  <p><b>+{{ b.miles }} Miles</b> added · You're a <b>Qualiflyer</b>, ranked <b>#{{ c.rank }}</b> on the leaderboard.</p>
+  {% if o.feedback_to_student %}<blockquote>“{{ o.feedback_to_student }}”<cite>— {{ o.recorded_by_name }}</cite></blockquote>{% endif %}
+  {% if b.next_badge and not c.demo %}<div class="hero-cta"><a class="btn success" href="{% url 'student_home' %}?journey={% for x in c.journeys %}{% if x.badge.code == b.next_badge.code %}{{ x.pk }}{% endif %}{% endfor %}">Next up: {{ b.next_badge.level }} {% icon "right" %}</a></div>
+  {% elif b.next_badge %}<div class="hero-cta"><span class="btn success fake">Next up: {{ b.next_badge.level }} {% icon "right" %}</span></div>{% endif %}
+</section>
+
+{% elif j.state == "RETAKE" or j.state == "FAILED" %}
+<section class="hero tone-{% if j.state == 'RETAKE' %}warn{% else %}danger{% endif %}">
+  <div class="hero-top"><span class="eyebrow">{{ b.track }} · {{ b.level }}</span>{% pill j.state "student" %}</div>
+  <h2>{% if j.state == "RETAKE" %}Not yet — you were close{% else %}Not cleared this time{% endif %}</h2>
+  {% days_until j.cooldown_until as dleft %}
+  <p>Your next attempt unlocks <b>{{ j.cooldown_until|ist_long }}</b> ({{ dleft }} day{{ dleft|pluralize }}). Use the time on the areas below.</p>
+  {% if o.feedback_to_student %}<blockquote>“{{ o.feedback_to_student }}”<cite>— {{ o.recorded_by_name }}</cite></blockquote>{% endif %}
+  {% if c.weak %}<div class="chips">{% for w in c.weak %}<span class="chip">{% icon "target" 12 %} {{ w }}</span>{% endfor %}</div>{% endif %}
+  {% if j.cooldown_until > c.deadline %}<div class="callout danger">{% icon "alert" %} This date is after the badge deadline. Your campus GRIT team has been alerted and will contact you.</div>{% endif %}
+  <div class="hero-foot">{% include "interviews/partials/attempts.html" with used=j.attempts_used max=j.max_attempts %}{% if not c.demo %}<a class="btn ghost sm" href="{% url 'student_interview' %}">Full feedback</a>{% endif %}</div>
+</section>
+
+{% elif j.state == "NO_SHOW" %}
+<section class="hero tone-danger">
+  <div class="hero-top"><span class="eyebrow">{{ b.track }} · {{ b.level }}</span>{% pill j.state "student" %}</div>
+  <h2>We missed you at your interview</h2>
+  <p>You can book a new slot from <b>{{ j.cooldown_until|ist_long }}</b>. {% if j.no_shows >= 2 %}This missed interview used one of your attempts.{% else %}A second missed interview will use one of your attempts.{% endif %}</p>
+  <div class="hero-foot">{% include "interviews/partials/attempts.html" with used=j.attempts_used max=j.max_attempts %}</div>
+</section>
+
+{% elif j.state == "ON_HOLD" %}
+<section class="hero tone-danger">
+  <div class="hero-top"><span class="eyebrow">{% icon "shield" 14 %} {{ b.track }} · {{ b.level }}</span>{% pill j.state "student" %}</div>
+  <h2>Your {{ b.level }} journey is on hold</h2>
+  <p>Your progress is under an integrity review. Booking is paused and any booked slot has been released. We'll update you within 5 working days.</p>
+</section>
+
+{% elif j.state == "REVOKED" %}
+<section class="hero tone-danger">
+  <div class="hero-top"><span class="eyebrow">{% icon "shield" 14 %} {{ b.track }} · {{ b.level }}</span>{% pill j.state "student" %}</div>
+  <h2>Your {{ b.level }} badge has been withdrawn</h2>
+  <p>Following an integrity review, this badge{% if j.prev_state == "PASSED" %} and its {{ b.miles }} Miles were{% else %} was{% endif %} removed for this season. To appeal, contact your campus GRIT team within 7 days of {{ j.revoked_at|ist_date }}.</p>
+</section>
+
+{% elif j.state == "CLOSED" %}
+<section class="hero tone-muted">
+  <div class="hero-top"><span class="eyebrow">{{ b.track }} · {{ b.level }}</span>{% pill j.state "student" %}</div>
+  <h2>No attempts left for {{ b.level }}</h2>
+  <p>You've used all {{ j.max_attempts }} attempts this season. Your feedback is saved below. If something affected your interviews, talk to your campus GRIT team.</p>
+  <div class="hero-foot">{% include "interviews/partials/attempts.html" with used=j.attempts_used max=j.max_attempts %}</div>
+</section>
+{% endif %}
+{% endwith %}

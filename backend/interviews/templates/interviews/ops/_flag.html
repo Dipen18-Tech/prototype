@@ -1,0 +1,13 @@
+{% load grit %}{% with j=f.journey s=f.journey.student %}
+<div class="card flag-card {{ f.status }}">
+  <div class="card-head"><div class="who"><span class="avatar sm">{{ s.name|initials }}</span><div><b>{{ s.name }}</b><small>{{ s.roll_no }} · {{ j.badge }}</small></div></div>
+    {% if f.status == "open" %}<span class="pill tone-danger">Open</span>{% elif f.status == "confirmed" %}<span class="pill tone-danger">Confirmed · nullified</span>{% else %}<span class="pill tone-success">Dismissed</span>{% endif %}</div>
+  <p>{{ f.reason }}</p>
+  <p class="muted small">Raised {% rel f.raised_at %}{% if j.prev_state %} · state before review: {{ j.prev_state|state_label }}{% endif %}{% if f.resolved_at %} · resolved {% rel f.resolved_at %}{% endif %}</p>
+  {% if f.status == "open" %}
+  <form method="post" class="row-actions">{% csrf_token %}<input type="hidden" name="flag" value="{{ f.pk }}">
+    <button class="btn danger sm" name="decision" value="confirmed">Confirm malpractice{% if j.prev_state == "PASSED" %} · nullify badge{% endif %}</button>
+    <button class="btn ghost sm" name="decision" value="dismissed">Dismiss · restore</button>
+  </form>{% endif %}
+</div>
+{% endwith %}

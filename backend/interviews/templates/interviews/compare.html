@@ -1,0 +1,38 @@
+{% extends "interviews/base.html" %}{% load grit %}
+{% block title %}Before & after · GRIT{% endblock %}
+{% block content %}
+<div class="narrow wide compare">
+  <div class="page-head"><div><h1>Before &amp; after the result</h1><p class="muted">The same templates the live app uses, rendered for one student immediately before and after the outcome is recorded.</p></div></div>
+  <div class="chips scen">{% for k, label in scenarios %}<a class="chip-btn {% if k == key %}on{% endif %}" href="?scenario={{ k }}" style="text-decoration:none">{{ label }}</a>{% endfor %}</div>
+
+  <section class="cmp-surface"><div class="cmp-title"><h3>Student home · status card</h3><p class="muted small">The first thing a student sees. After the result it must answer: what happened, and what do I do next?</p></div>
+    <div class="cmp-cols">
+      <div class="cmp-col"><span class="cmp-tag before">Before</span>{% include "interviews/partials/hero.html" with c=before %}{% include "interviews/partials/status_card.html" with c=before %}</div>
+      <div class="cmp-col"><span class="cmp-tag after">After</span>{% include "interviews/partials/hero.html" with c=after %}{% include "interviews/partials/status_card.html" with c=after %}</div>
+    </div></section>
+
+  <section class="cmp-surface"><div class="cmp-title"><h3>Profile · badge shelf</h3><p class="muted small">The badge is the reward — it should visibly appear (or disappear on nullification).</p></div>
+    <div class="cmp-cols">
+      <div class="cmp-col"><span class="cmp-tag before">Before</span>{% include "interviews/partials/badge_shelf.html" with c=before %}</div>
+      <div class="cmp-col"><span class="cmp-tag after">After</span>{% include "interviews/partials/badge_shelf.html" with c=after %}</div>
+    </div></section>
+
+  <section class="cmp-surface"><div class="cmp-title"><h3>Leaderboard position</h3><p class="muted small">Passing makes the student a Qualiflyer and puts them on the board; nullification removes the badge Miles.</p></div>
+    <div class="cmp-cols">
+      <div class="cmp-col"><span class="cmp-tag before">Before</span>{% include "interviews/partials/lb_line.html" with c=before %}</div>
+      <div class="cmp-col"><span class="cmp-tag after">After</span>{% include "interviews/partials/lb_line.html" with c=after %}</div>
+    </div></section>
+
+  <section class="cmp-surface"><div class="cmp-title"><h3>Inbox message</h3><p class="muted small">Sent the moment the outcome is saved.</p></div>
+    <div class="cmp-cols">
+      <div class="cmp-col"><span class="cmp-tag before">Before</span>{% include "interviews/partials/msg.html" with m=before.message %}</div>
+      <div class="cmp-col"><span class="cmp-tag after">After</span>{% include "interviews/partials/msg.html" with m=after.message %}</div>
+    </div></section>
+
+  <section class="cmp-surface"><div class="cmp-title"><h3>Interview Ops tracker</h3><p class="muted small">The team sees the same truth, in their language.</p></div>
+    <div class="cmp-cols">
+      <div class="cmp-col"><span class="cmp-tag before">Before</span><div class="card"><span class="muted small">Booking tracker row</span><div class="ops-row"><div class="who"><span class="avatar sm">AS</span><div><b>Aarav Sharma</b><small>Hyderabad</small></div></div>{% pill before.journey.state %}<span class="muted small">{{ before.detail }}</span></div></div></div>
+      <div class="cmp-col"><span class="cmp-tag after">After</span><div class="card"><span class="muted small">Booking tracker row</span><div class="ops-row"><div class="who"><span class="avatar sm">AS</span><div><b>Aarav Sharma</b><small>Hyderabad</small></div></div>{% pill after.journey.state %}<span class="muted small">{{ after.detail }}</span></div></div></div>
+    </div></section>
+</div>
+{% endblock %}

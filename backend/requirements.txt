@@ -1,0 +1,4 @@
+Django>=5.2,<6.0
+whitenoise>=6.7     # serves static files when DEBUG=0
+gunicorn>=22.0      # production WSGI server (Linux / Replit)
+# psycopg[binary]>=3.2   # uncomment to use Postgres (set POSTGRES_* env vars)

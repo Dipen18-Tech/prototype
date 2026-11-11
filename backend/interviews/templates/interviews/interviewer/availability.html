@@ -1,0 +1,45 @@
+{% extends "interviews/base.html" %}{% load grit %}
+{% block title %}Availability · GRIT{% endblock %}
+{% block content %}
+<div class="narrow wide">
+  <div class="page-head">
+    <div><h1>Availability</h1><p class="muted">Click a cell to open or close a 30-min slot. Booked slots are locked — open one to say you can't make it, and we'll try to hand it to a colleague first.</p></div>
+    <div class="date-nav">
+      {% if week > 0 %}<a class="icon-btn" href="?week=0" aria-label="This week">{% icon "left" %}</a>{% endif %}
+      <span class="muted small">{{ days.0.day|ist_date }} – {{ days.6.day|ist_date }}</span>
+      {% if week < 1 %}<a class="icon-btn" href="?week=1" aria-label="Next week">{% icon "right" %}</a>{% endif %}
+    </div>
+  </div>
+  <div class="kpis small-kpis">
+    <div class="kpi"><span>Booked this week</span><b>{{ booked }}</b></div>
+    <div class="kpi"><span>Open, bookable</span><b>{{ open }}</b></div>
+    <div class="kpi"><span>Daily cap</span><b>{{ me.max_per_day }}</b><small>students can't book past this</small></div>
+  </div>
+
+  <form method="post" class="add-window">{% csrf_token %}
+    <b>Add a window</b>
+    <select name="day" aria-label="Day">{% for d in days %}{% day_label d.day as dl %}<option value="{{ d.ms }}">{{ dl }}{% if dl != d.day|ist_date %} · {{ d.day|ist_date }}{% endif %}</option>{% endfor %}</select>
+    <select name="start_min" aria-label="From">{% for m, t in times %}<option value="{{ m }}" {% if m == 600 %}selected{% endif %}>{{ t|ist_time }}</option>{% endfor %}</select>
+    <span>to</span>
+    <select name="end_min" aria-label="To">{% for m, t in times %}<option value="{{ m }}" {% if m == 720 %}selected{% endif %}>{{ t|ist_time }}</option>{% endfor %}</select>
+    <button class="btn primary sm" name="add_window" value="1">Add slots</button>
+  </form>
+
+  <form method="post" class="week-grid" style="--cols:7">{% csrf_token %}
+    <div class="wg-corner"></div>
+    {% for d in days %}{% day_label d.day as dl %}<div class="wg-day {% if dl == 'Today' %}today{% endif %}"><b>{% if dl == "Today" %}Today{% else %}{{ d.day|ist_dow }}{% endif %} {{ d.day|ist_day }}</b><small>{{ d.booked }}/{{ me.max_per_day }} booked</small>
+      <a class="link-btn" href="{% url 'iv_block_day' %}?day={{ d.ms }}">Block day</a></div>{% endfor %}
+    {% for row in rows %}
+      <div class="wg-time">{% if row.label %}{{ row.label|ist_time }}{% endif %}</div>
+      {% for cell in row.cells %}
+        {% if cell.state == "booked" %}
+          {% if cell.iv and not cell.past %}<a class="cell booked" href="{% url 'iv_release' cell.iv.pk %}" title="{{ cell.iv.journey.student.name }} — click if you can't make it">{{ cell.iv.journey.student.name|initials }}</a>
+          {% else %}<span class="cell booked past" title="{{ cell.iv.journey.student.name }}">{{ cell.iv.journey.student.name|initials }}</span>{% endif %}
+        {% elif cell.past %}<span class="cell past"></span>
+        {% else %}<button class="cell {{ cell.state }}" name="toggle" value="{{ cell.ms }}" aria-label="{{ cell.t|ist_date }} {{ cell.t|ist_time }} {% if cell.state == 'open' %}open — click to remove{% else %}click to open{% endif %}">{% if cell.state == "open" %}Open{% endif %}</button>{% endif %}
+      {% endfor %}
+    {% endfor %}
+  </form>
+  <div class="legend"><span><i class="cell open"></i> Open</span><span><i class="cell booked"></i> Booked</span><span><i class="cell"></i> Not available</span><span><i class="cell past"></i> Past</span></div>
+</div>
+{% endblock %}

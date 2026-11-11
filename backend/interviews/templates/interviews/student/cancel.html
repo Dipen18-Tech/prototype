@@ -1,0 +1,11 @@
+{% extends "interviews/base.html" %}{% load grit %}
+{% block content %}
+<div class="narrow">
+  <form method="post" class="confirm-card">{% csrf_token %}
+    <h1>Cancel this interview?</h1>
+    <p><b>{{ iv.start_at|ist_long }}, {{ iv.start_at|ist_time }}</b> with {{ iv.interviewer.name }}.</p>
+    <p>Your slot will be released to other students. This <b>doesn't</b> use an attempt, and you can book again any time.</p>
+    <div class="actions"><a class="btn ghost" href="{% url 'student_interview' %}">Keep my slot</a><button class="btn danger" type="submit">Yes, cancel</button></div>
+  </form>
+</div>
+{% endblock %}

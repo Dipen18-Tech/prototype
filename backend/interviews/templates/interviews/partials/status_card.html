@@ -1,0 +1,5 @@
+{% load grit %}<div class="card status-card">
+  <div class="stat-big"><span class="muted small">Miles</span><b class="miles">{{ c.miles|num }}</b></div>
+  <div class="stat-big"><span class="muted small">Leaderboard</span><b>{% if c.qualiflyer %}#{{ c.rank }}{% else %}—{% endif %}</b></div>
+  <div class="stat-big"><span class="muted small">Status</span><b class="{% if c.qualiflyer %}q-yes{% else %}q-no{% endif %}">{% if c.qualiflyer %}Qualiflyer{% else %}Pre-Qualiflyer{% endif %}</b></div>
+</div>

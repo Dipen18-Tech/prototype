@@ -1,0 +1,12 @@
+{% extends "interviews/base.html" %}{% load grit %}
+{% block content %}
+<div class="narrow">
+  <form method="post" class="confirm-card">{% csrf_token %}
+    <h1>Can't make this interview?</h1>
+    <p><b>{{ iv.journey.student.name }}</b> · {{ iv.start_at|ist_long }}, {{ iv.start_at|ist_time }}</p>
+    <p>We'll first try to hand it to another interviewer who's free at the <b>same time</b>. If nobody is, the booking is cancelled, the student is notified, and they get priority rebooking (no attempt used).</p>
+    <label class="field"><span>{{ form.reason.label }}</span>{{ form.reason }}</label>
+    <div class="actions"><a class="btn ghost" href="{% url 'iv_today' %}">Back</a><button class="btn danger" type="submit">Release this interview</button></div>
+  </form>
+</div>
+{% endblock %}

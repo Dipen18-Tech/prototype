@@ -1,0 +1,4 @@
+{% load grit %}<ol class="stepper">{% for s in steps %}
+  <li class="{% if s.done %}done{% elif s.current %}current{% endif %} {% if s.bad %}bad{% endif %}"><span class="dot">{% if s.done %}{% icon "check" 12 %}{% elif s.bad %}{% icon "x" 12 %}{% else %}{{ s.n }}{% endif %}</span>
+  <span class="lbl">{{ s.label }}{% if s.sub %}<small>{% if s.sub.year %}{% if forloop.last %}from {% endif %}{{ s.sub|ist_date }}{% else %}{{ s.sub }}{% endif %}</small>{% endif %}</span></li>
+{% endfor %}</ol>

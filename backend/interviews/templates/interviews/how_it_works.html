@@ -1,0 +1,40 @@
+{% extends "interviews/base.html" %}{% load grit %}
+{% block title %}How it works · GRIT{% endblock %}
+{% block content %}
+<div class="narrow wide spec">
+  <div class="page-head"><div><h1>How it works</h1><p class="muted">The states and transitions below are rendered from <code>machine.py</code> and <code>utils.py</code> — the same code that enforces them, so this page can't drift from the product.</p></div></div>
+  <div class="card">{% include "interviews/partials/state_diagram.html" %}</div>
+
+  <h2 class="section-title">The 3 most important student messages</h2>
+  <div class="msg-grid">{% for when, why, m in key_msgs %}
+    <div class="phone-wrap">
+      <div class="phone"><div class="phone-bar"><span class="logo sm">GRIT</span><span class="muted small">now</span></div>{% include "interviews/partials/msg.html" with m=m %}</div>
+      <div class="msg-why"><span class="num">{{ forloop.counter }}</span><div><b>{{ when }}</b><p class="muted small">{{ why }}</p></div></div>
+    </div>{% endfor %}
+  </div>
+
+  <h2 class="section-title">States</h2>
+  <div class="tbl-wrap"><table class="tbl"><thead><tr><th>State</th><th>Team sees</th><th>Student sees</th><th>Meaning</th></tr></thead><tbody>
+    {% for k, m in states %}<tr><td><code>{{ k }}</code></td><td>{% pill k %}</td><td>{{ m.student }}</td><td class="detail">{{ m.desc }}</td></tr>{% endfor %}
+  </tbody></table></div>
+
+  <h2 class="section-title">Transitions</h2>
+  <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Event</th><th>From</th><th>To</th><th>Who</th><th>Rule</th></tr></thead><tbody>
+    {% for t in transitions %}<tr><td><code>{{ t.event }}</code></td><td class="detail">{% if t.from|length > 4 %}Any active state{% else %}{{ t.from|join:", " }}{% endif %}</td><td><b>{{ t.to }}</b></td><td>{{ t.actor }}</td><td class="detail">{{ t.note }}</td></tr>{% endfor %}
+  </tbody></table></div>
+
+  <div class="spec-2col">
+    <div><h2 class="section-title">Policies <span class="muted small">(utils.py)</span></h2>
+      <table class="tbl compact"><tbody>{% for k, v in policies %}<tr><td>{{ k }}</td><td><b>{{ v }}</b></td></tr>{% endfor %}</tbody></table></div>
+    <div><h2 class="section-title">Built-in safeguards</h2>
+      <ul class="edge-list">
+        <li><b>No double booking</b><span class="muted small">Row lock on the slot + a partial unique index on live bookings. The second student gets “That time was just taken”.</span></li>
+        <li><b>Interviewer can't make it</b><span class="muted small">Booking moves to a free colleague at the same time; otherwise cancelled with priority rebooking, no attempt used.</span></li>
+        <li><b>Call drops / no-show</b><span class="muted small">Technical issue uses no attempt. No-show only after 10 min; the 2nd uses an attempt.</span></li>
+        <li><b>Malpractice after the badge</b><span class="muted small">Flag → on hold → confirm nullifies the badge, reverses Miles, re-ranks the leaderboard.</span></li>
+        <li><b>Deadline</b><span class="muted small">No slots past the deadline; cooldowns that cross it are flagged to ops.</span></li>
+        <li><b>Audit</b><span class="muted small">Every state change is written to the audit log with actor and reason.</span></li>
+      </ul></div>
+  </div>
+</div>
+{% endblock %}

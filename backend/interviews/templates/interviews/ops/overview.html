@@ -1,0 +1,38 @@
+{% extends "interviews/base.html" %}{% load grit %}
+{% block title %}Interview overview · GRIT{% endblock %}
+{% block content %}
+<div class="narrow wide">
+  <div class="page-head"><div><h1>Interview overview</h1><p class="muted">{{ days_left }} days to the {{ deadline|ist_date }} badge deadline · {{ students }} students · {{ interviewers }} interviewers</p></div>
+    <a class="btn ghost sm" href="{% url 'ops_export' %}">{% icon "file" %} Export CSV</a></div>
+  <div class="kpis">
+    <a class="kpi link" href="{% url 'ops_tracker' %}?filter=unbooked"><span>Eligible · not booked</span><b>{{ unbooked }}</b><small>{{ stale }} waiting {{ nudge_after }}+ days</small></a>
+    <a class="kpi link" href="{% url 'ops_tracker' %}?filter=booked"><span>Booked</span><b>{{ booked }}</b><small>upcoming interviews</small></a>
+    <a class="kpi link" href="{% url 'ops_outcomes' %}"><span>Awaiting outcome</span><b class="{% if overdue %}danger-text{% endif %}">{{ awaiting }}</b><small>{{ overdue }} past {{ sla_h }}h SLA</small></a>
+    <a class="kpi link" href="{% url 'ops_tracker' %}?filter=passed"><span>Badges earned</span><b>{{ passed }}</b><small>pass rate {{ pass_rate }}%</small></a>
+  </div>
+  <div class="ops-grid">
+    <div class="card"><div class="card-head"><h3>Needs attention</h3></div>
+      <ul class="todo">
+        {% if stale %}<li><span>{% icon "send" %} <b>{{ stale }}</b> students eligible for {{ nudge_after }}+ days haven't booked</span>
+          <form method="post" action="{% url 'ops_tracker' %}" class="inline">{% csrf_token %}<input type="hidden" name="next" value="{% url 'ops_overview' %}"><button class="btn primary sm" name="action" value="nudge_stale">Nudge all</button></form></li>{% endif %}
+        {% if awaiting %}<li><span>{% icon "clock" %} <b>{{ awaiting }}</b> outcomes pending{% if overdue %}, <b class="danger-text">{{ overdue }} overdue</b>{% endif %}</span><a class="btn ghost sm" href="{% url 'ops_outcomes' %}">Review</a></li>{% endif %}
+        {% if flags %}<li><span>{% icon "shield" %} <b>{{ flags }}</b> integrity flag{{ flags|pluralize }} awaiting decision</span><a class="btn ghost sm" href="{% url 'ops_integrity' %}">Decide</a></li>{% endif %}
+        {% if deadline_risk %}<li><span>{% icon "alert" %} <b>{{ deadline_risk }}</b> student{{ deadline_risk|pluralize }} can't rebook before the deadline</span><a class="btn ghost sm" href="{% url 'ops_tracker' %}?filter=cooldown">View</a></li>{% endif %}
+        {% if seats7 < waiting %}<li><span>{% icon "calendar" %} Only <b>{{ seats7 }}</b> seats for <b>{{ waiting }}</b> students who need one this week</span><span class="muted small">Ask interviewers to add slots</span></li>{% endif %}
+        {% if not stale and not awaiting and not flags and not deadline_risk and seats7 >= waiting %}<li><span class="muted">All clear. {% icon "check" %}</span></li>{% endif %}
+      </ul>
+    </div>
+    <div class="card"><div class="card-head"><h3>Capacity · next 7 days</h3></div>
+      <div class="capacity"><div><b>{{ seats7 }}</b><span>bookable seats</span></div><div class="vs">vs</div><div><b>{{ waiting }}</b><span>students needing a slot</span></div></div>
+      <div class="meter {{ health }}"><i style="width:{{ meter }}%"></i></div>
+      <p class="muted small">{% if health == "ok" %}Healthy buffer.{% elif health == "warn" %}Tight — a few cancellations could cause a backlog.{% else %}Shortfall — add interviewer hours.{% endif %} Seats respect each interviewer's daily cap.</p>
+      <table class="tbl compact"><thead><tr><th>Interviewer</th><th>Booked (7d)</th><th>Open (7d)</th><th>Pending outcome</th></tr></thead><tbody>
+        {% for l in load %}<tr><td>{{ l.iv.name }}</td><td>{{ l.upcoming }}</td><td>{{ l.open }}</td><td>{% if l.pending %}<span class="pill tone-warn">{{ l.pending }}</span>{% else %}0{% endif %}</td></tr>{% endfor %}
+      </tbody></table>
+    </div>
+    <div class="card span2"><div class="card-head"><h3>Journey funnel</h3><span class="muted small">every student × badge</span></div>
+      <div class="funnel">{% for label, n, tone, w in funnel %}<div class="f-row"><span>{{ label }}</span><div class="f-bar"><i class="tone-bg-{{ tone }}" style="width:{{ w }}%"></i></div><b>{{ n }}</b></div>{% endfor %}</div>
+    </div>
+  </div>
+</div>
+{% endblock %}

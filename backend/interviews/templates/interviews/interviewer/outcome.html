@@ -1,0 +1,40 @@
+{% extends "interviews/base.html" %}{% load grit %}
+{% block title %}Record outcome · GRIT{% endblock %}
+{% block content %}
+<div class="narrow">
+  <a href="{% url 'iv_today' %}?day={{ iv.start_at|ms }}" class="back">{% icon "left" %} Back to schedule</a>
+  <form method="post" class="confirm-card outcome-form" novalidate>
+    {% csrf_token %}
+    <div><h1>Record outcome · {{ j.student.name }}</h1>
+      <p class="muted small">{{ badge }} · {{ iv.start_at|ist_date }} {{ iv.start_at|ist_time }} · Attempt {{ iv.attempt_no }} of {{ j.max_attempts }}</p></div>
+    {% if form.non_field_errors %}<div class="form-errors">{{ form.non_field_errors.0 }}</div>{% endif %}
+
+    <fieldset><legend>Did the interview happen?</legend>
+      <div class="radio-seg wide">{% for r in form.attendance %}<label>{{ r.tag }} {{ r.choice_label }}</label>{% endfor %}</div>
+    </fieldset>
+
+    <div class="only-attended">
+      <fieldset><legend>Rubric <span class="muted small">(1 = weak, 4 = strong)</span></legend>
+        {% for label, field in form.rubric_rows %}<div class="score-row"><span>{{ label }}</span><div class="radio-seg" role="radiogroup" aria-label="{{ label }}">{% for r in field %}<label>{{ r.tag }} {{ r.choice_label }}</label>{% endfor %}</div></div>{% endfor %}
+      </fieldset>
+      <fieldset><legend>Outcome</legend>
+        <div class="result-cards">
+          {% for r in form.result %}<label class="rc {{ r.data.value }}">{{ r.tag }}<span><b>{{ r.choice_label }}</b><small>{% if r.data.value == "pass" %}Badge + {{ badge.miles }} Miles awarded now{% elif r.data.value == "retake" %}Close. Can rebook in {{ cd.RETAKE }} days{% else %}Below bar. Can rebook in {{ cd.FAILED }} days{% endif %}</small></span></label>{% endfor %}
+        </div>
+        {{ form.result.errors }}
+        {% if last_attempt %}<p class="callout danger small">{% icon "alert" %} This is the student's last attempt. Retake/Fail will close their {{ badge.level }} journey.</p>{% endif %}
+      </fieldset>
+      <label class="field"><span>Feedback for the student <em class="muted small">— shown to them word for word. Required for Retake/Fail (min {{ min_fb }} characters).</em></span>
+        {{ form.feedback }}{{ form.feedback.errors }}</label>
+    </div>
+    <label class="field"><span>Internal notes <em class="muted small">— only the interview team sees this</em></span>{{ form.notes }}</label>
+
+    <div class="preview-box">
+      <span class="muted small">{% icon "bell" 12 %} Student will see:</span>
+      <div class="pv pv-empty"><p class="muted small">Pick an outcome to preview the message.</p></div>
+      {% for key, m in previews.items %}<div class="pv pv-{{ key }}"><b>{{ m.title }}</b><p>{{ m.body }}</p></div>{% endfor %}
+    </div>
+    <div class="actions"><a class="btn ghost" href="{% url 'iv_today' %}">Cancel</a><button class="btn primary" type="submit">Save outcome</button></div>
+  </form>
+</div>
+{% endblock %}

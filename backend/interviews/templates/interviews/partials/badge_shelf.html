@@ -1,0 +1,7 @@
+{% load grit %}<div class="card">
+  <div class="card-head"><h3>{% icon "award" %} {{ c.badge.track }}</h3></div>
+  <div class="shelf">{% for m in c.shelf %}
+    <div class="medallion {{ m.cls }}"><div class="coin">{% if m.state == "REVOKED" %}{% icon "x" 18 %}{% elif m.state == "PASSED" %}{% icon "award" 18 %}{% else %}{% icon "lock" 14 %}{% endif %}</div>
+      <b>{{ m.level }}</b><small>{% if m.state == "PASSED" %}Earned{% elif m.state == "REVOKED" %}Withdrawn{% elif m.state %}{{ m.state|state_student }}{% else %}Locked{% endif %}</small></div>
+  {% endfor %}</div>
+</div>

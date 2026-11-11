@@ -1,0 +1,12 @@
+{% extends "interviews/base.html" %}{% load grit %}
+{% block title %}Integrity · GRIT{% endblock %}
+{% block content %}
+<div class="narrow wide">
+  <div class="page-head"><div><h1>Integrity</h1><p class="muted">Raising a flag freezes the journey immediately (booking released, badge frozen). Confirming nullifies the badge and reverses its Miles; dismissing restores the previous state.</p></div>
+    <a class="btn danger sm" href="{% url 'ops_flag_new' %}">{% icon "flag" %} Raise a flag</a></div>
+  <h3 class="section-title">Open ({{ open|length }})</h3>
+  {% for f in open %}{% include "interviews/ops/_flag.html" %}{% empty %}<p class="muted">No open flags.</p>{% endfor %}
+  <h3 class="section-title">Resolved</h3>
+  {% for f in done %}{% include "interviews/ops/_flag.html" %}{% empty %}<p class="muted">None yet.</p>{% endfor %}
+</div>
+{% endblock %}

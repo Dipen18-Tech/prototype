@@ -1,0 +1,7 @@
+{% extends "interviews/base.html" %}{% load grit %}
+{% block title %}Inbox · GRIT{% endblock %}
+{% block content %}
+<div class="narrow"><h1>Inbox</h1><p class="muted">Every update about your interview, newest first.</p>
+  {% for m in items %}{% include "interviews/partials/msg.html" with link=True %}{% empty %}<div class="empty">{% icon "bell" 28 %}<p class="muted">No messages yet.</p></div>{% endfor %}
+</div>
+{% endblock %}

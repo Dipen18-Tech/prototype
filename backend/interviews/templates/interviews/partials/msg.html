@@ -1,0 +1,5 @@
+{% load grit %}<article class="msg tone-{{ m.tone }} {% if m.unread %}unread{% endif %}">
+  <div class="msg-head"><b>{{ m.title }}</b>{% if m.at %}<span class="muted small">{% rel m.at %}</span>{% endif %}</div>
+  <p>{{ m.body }}</p>
+  {% if m.cta and link %}{% if m.target == "book" %}<a class="btn ghost sm" href="{% url 'student_book' %}">{{ m.cta }}</a>{% elif m.target == "interview" %}<a class="btn ghost sm" href="{% url 'student_interview' %}">{{ m.cta }}</a>{% else %}<a class="btn ghost sm" href="{% url 'student_home' %}">{{ m.cta }}</a>{% endif %}{% elif m.cta %}<span class="btn primary sm fake">{{ m.cta }}</span>{% endif %}
+</article>

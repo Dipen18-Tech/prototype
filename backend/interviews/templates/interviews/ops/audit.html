@@ -1,0 +1,13 @@
+{% extends "interviews/base.html" %}{% load grit %}
+{% block title %}Audit log · GRIT{% endblock %}
+{% block content %}
+<div class="narrow wide">
+  <div class="page-head"><div><h1>Audit log</h1><p class="muted">Every state change, who made it and why. Nothing changes a student's journey without a row here.</p></div></div>
+  <form method="get" class="filter-row"><input type="search" name="q" value="{{ q }}" placeholder="Filter by student, event or actor" aria-label="Filter audit log"><button class="btn ghost sm">Filter</button></form>
+  <div class="tbl-wrap"><table class="tbl"><thead><tr><th>When</th><th>Student</th><th>Event</th><th>From → To</th><th>Actor</th><th>Detail</th></tr></thead><tbody>
+    {% for e in events %}<tr><td title="{{ e.created_at|ist_date }} {{ e.created_at|ist_time }}">{% rel e.created_at %}</td><td>{{ e.student.name|default:"—" }}</td><td><code>{{ e.event }}</code></td>
+      <td>{% if e.from_state == e.to_state %}<span class="muted">{{ e.from_state }}</span>{% else %}{{ e.from_state }} → <b>{{ e.to_state }}</b>{% endif %}</td><td>{{ e.actor }}</td><td class="detail">{{ e.detail }}</td></tr>
+    {% empty %}<tr><td colspan="6" class="empty-row">No events match.</td></tr>{% endfor %}
+  </tbody></table></div>
+</div>
+{% endblock %}
