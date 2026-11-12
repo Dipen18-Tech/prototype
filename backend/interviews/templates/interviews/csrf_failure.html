@@ -1,0 +1,21 @@
+{% extends "interviews/base.html" %}{% load grit %}
+{% block title %}Page expired · GRIT{% endblock %}
+{% block content %}
+<div class="narrow">
+  <div class="confirm-card">
+    <h1>This page has expired</h1>
+    <p>For your security, buttons on a page stop working if it was opened before you signed in or switched account. <b>Nothing was changed.</b></p>
+    {% if is_logout %}
+      <form method="post" action="{% url 'logout' %}" class="actions">{% csrf_token %}
+        <a class="btn ghost" href="{% url 'home' %}">Stay signed in</a>
+        <button class="btn primary" type="submit">{% icon "logout" 14 %} Sign out</button>
+      </form>
+    {% else %}
+      <div class="actions">
+        <a class="btn ghost" href="{% url 'home' %}">Go to my home page</a>
+        <a class="btn primary" href="{{ back_url }}">{% icon "refresh" 14 %} Reload and try again</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

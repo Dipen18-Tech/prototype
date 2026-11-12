@@ -286,3 +286,64 @@ class PageTests(Base):
         r = self.client.post(reverse("login"), {"username": "priya", "password": "grit-demo-2026"}, follow=True)
         self.assertEqual(r.redirect_chain[-1][0], reverse("iv_today"))
 
+
+
+class CsrfTests(Base):
+    """Reproduces '403 CSRF verification failed' on sign-out and checks the production origin setup."""
+    HOST = "dipenmerchant.pythonanywhere.com"
+
+    def _token(self, client, path):
+        import re
+
+        return re.search(r'name="csrfmiddlewaretoken" value="([^"]+)"', client.get(path).content.decode()).group(1)
+
+    def _switch_with_stale_token(self):
+        from django.test import Client
+
+        c = Client(enforce_csrf_checks=True)
+        c.get(reverse("demo_login", args=["aarav"]))
+        stale = self._token(c, reverse("student_home"))     # page opened as Aarav…
+        c.get(reverse("demo_login", args=["aarav"]))         # …then signed in again (token rotates)
+        return c, stale
+
+    def test_sign_out_works_from_a_stale_page(self):
+        c, stale = self._switch_with_stale_token()
+        r = c.post(reverse("logout"), {"csrfmiddlewaretoken": stale})
+        self.assertRedirects(r, reverse("login"), fetch_redirect_response=False)
+
+    def test_demo_buttons_work_from_a_stale_page(self):
+        c, stale = self._switch_with_stale_token()
+        r = c.post(reverse("demo_clock"), {"csrfmiddlewaretoken": stale, "seconds": "3600", "next": "/student/"})
+        self.assertEqual(r.status_code, 302)
+
+    def test_real_actions_still_reject_stale_tokens_with_friendly_page(self):
+        c, stale = self._switch_with_stale_token()
+        start = first_time(journey("s1"))
+        r = c.post(reverse("student_confirm"), {"csrfmiddlewaretoken": stale, "start": int(start.timestamp() * 1000), "ack": "on"})
+        self.assertContains(r, "This page has expired", status_code=403)
+        self.assertEqual(journey("s1").state, M.ELIGIBLE, "a forged booking must not go through")
+
+    def test_only_low_risk_views_are_csrf_exempt(self):
+        from interviews.urls import urlpatterns
+
+        exempt = sorted(p.name for p in urlpatterns if getattr(p.callback, "csrf_exempt", False))
+        self.assertEqual(exempt, ["demo_clear_skill", "demo_clock", "demo_reset", "demo_skip_cooldown", "logout"])
+
+    def _https_logout(self, forwarded_proto):
+        from django.test import Client, override_settings
+
+        extra = {"HTTP_X_FORWARDED_PROTO": "https"} if forwarded_proto else {}
+        with override_settings(DEBUG=False, ALLOWED_HOSTS=[".pythonanywhere.com"], SESSION_COOKIE_SECURE=True, CSRF_COOKIE_SECURE=True,
+                               SECURE_PROXY_SSL_HEADER=("HTTP_X_FORWARDED_PROTO", "https"), SECURE_SSL_REDIRECT=False):
+            c = Client(enforce_csrf_checks=True, HTTP_HOST=self.HOST, **extra)
+            c.get(reverse("demo_login", args=["aarav"]), secure=True)
+            tok = self._token(c, reverse("student_home"))
+            return c.post(reverse("logout"), {"csrfmiddlewaretoken": tok}, secure=True,
+                          HTTP_ORIGIN=f"https://{self.HOST}", HTTP_REFERER=f"https://{self.HOST}/student/")
+
+    def test_https_sign_out_works_behind_proxy(self):
+        self.assertEqual(self._https_logout(forwarded_proto=True).status_code, 302)
+
+    def test_https_sign_out_works_without_proxy_header(self):
+        # Even if the host doesn't send X-Forwarded-Proto, the default trusted origin covers *.pythonanywhere.com
+        self.assertEqual(self._https_logout(forwarded_proto=False).status_code, 302)

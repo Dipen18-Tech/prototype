@@ -118,6 +118,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 LOGIN_URL = "/login/"
 LOGIN_REDIRECT_URL = "/"   # HomeView sends each role to its own page
 LOGOUT_REDIRECT_URL = "/login/"
+# Friendly "page expired" screen instead of Django's bare 403 when a form's security token is stale.
+CSRF_FAILURE_VIEW = "interviews.views.csrf_failure"
 
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
@@ -134,5 +136,9 @@ LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "handlers": {"console": {"class": "logging.StreamHandler"}},
-    "loggers": {"interviews": {"handlers": ["console"], "level": "INFO"}},
+    "loggers": {
+        "interviews": {"handlers": ["console"], "level": "INFO"},
+        # Logs the exact reason a form was rejected (shows up in the host's error/server log).
+        "django.security.csrf": {"handlers": ["console"], "level": "WARNING", "propagate": False},
+    },
 }

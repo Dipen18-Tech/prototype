@@ -17,15 +17,17 @@ from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth import get_user_model, login
+from django.contrib.auth import get_user_model, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth.views import LoginView
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
+from django.utils.decorators import method_decorator
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.csrf import csrf_exempt
 from django.views import View
 from django.views.generic import FormView, ListView, RedirectView, TemplateView
 
@@ -151,8 +153,45 @@ class SignInView(LoginView):
         return ctx
 
 
-class SignOutView(LogoutView):
-    next_page = "login"
+# CSRF-exempt on purpose: low-risk action (worst case a forged request signs the user out).
+# Everything that changes real data (booking, outcomes, flags, availability…) keeps CSRF protection.
+@method_decorator(csrf_exempt, name="dispatch")
+class SignOutView(View):
+    """POST-only sign-out. Not Django's LogoutView: that one forces csrf_protect internally,
+    which would override the csrf_exempt above."""
+    http_method_names = ["post"]
+
+    def post(self, request):
+        logout(request)
+        return redirect("login")
+
+
+class CsrfFailureView(TemplateView):
+    """Shown instead of Django's bare 403 when a form's security token is stale or missing.
+
+    Most common cause: the page was open before the user signed in / switched account, which
+    rotates the token. The page renders a fresh token, so the button it offers works.
+    """
+    template_name = "interviews/csrf_failure.html"
+
+    def dispatch(self, request, *args, reason="", **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):  # failures happen on POST; render the same page
+        return self.get(request, *args, **kwargs)
+
+    def render_to_response(self, context, **kwargs):
+        return super().render_to_response(context, status=403, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        back = self.request.META.get("HTTP_REFERER", "")
+        ctx["is_logout"] = self.request.path == reverse("logout")
+        ctx["back_url"] = back if back and url_has_allowed_host_and_scheme(back, {self.request.get_host()}, require_https=self.request.is_secure()) else reverse("home")
+        return ctx
+
+
+csrf_failure = CsrfFailureView.as_view()  # settings.CSRF_FAILURE_VIEW points here
 
 
 class DemoLoginView(DemoOnlyMixin, ServiceCallMixin, View):
@@ -173,6 +212,9 @@ class DemoSwitchView(LoginRequiredMixin, DemoOnlyMixin, RedirectView):
         return reverse("demo_login", args=[self.request.GET.get("username", "")])
 
 
+# CSRF-exempt on purpose: low-risk action (worst case a forged request moves the demo clock; demo mode only).
+# Everything that changes real data (booking, outcomes, flags, availability…) keeps CSRF protection.
+@method_decorator(csrf_exempt, name="dispatch")
 class DemoClockView(LoginRequiredMixin, DemoOnlyMixin, ServiceCallMixin, View):
     http_method_names = ["post"]
     ALLOWED = {"3600": "1 hour", "86400": "1 day", "604800": "7 days"}
@@ -185,6 +227,9 @@ class DemoClockView(LoginRequiredMixin, DemoOnlyMixin, ServiceCallMixin, View):
         return redirect(self.safe_next("/"))
 
 
+# CSRF-exempt on purpose: low-risk action (worst case a forged request resets demo data; demo mode only).
+# Everything that changes real data (booking, outcomes, flags, availability…) keeps CSRF protection.
+@method_decorator(csrf_exempt, name="dispatch")
 class DemoResetView(LoginRequiredMixin, DemoOnlyMixin, View):
     http_method_names = ["post"]
 
@@ -338,6 +383,9 @@ class StudentInboxView(StudentMixin, TemplateView):
         return ctx
 
 
+# CSRF-exempt on purpose: low-risk action (worst case a forged request clears a demo skill; demo mode only).
+# Everything that changes real data (booking, outcomes, flags, availability…) keeps CSRF protection.
+@method_decorator(csrf_exempt, name="dispatch")
 class DemoClearSkillView(DemoOnlyMixin, StudentMixin, View):
     http_method_names = ["post"]
 
@@ -350,6 +398,9 @@ class DemoClearSkillView(DemoOnlyMixin, StudentMixin, View):
         return redirect("student_home")
 
 
+# CSRF-exempt on purpose: low-risk action (worst case a forged request skips a demo cooldown; demo mode only).
+# Everything that changes real data (booking, outcomes, flags, availability…) keeps CSRF protection.
+@method_decorator(csrf_exempt, name="dispatch")
 class DemoSkipCooldownView(DemoOnlyMixin, StudentMixin, View):
     http_method_names = ["post"]
 
