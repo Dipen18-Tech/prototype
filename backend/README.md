@@ -29,21 +29,46 @@ Run the tests:
 python manage.py test interviews
 ```
 
-## Deploy on Replit
+## Deploy on PythonAnywhere (free)
 
-1. Import the whole project folder into a Python Repl. The `.replit` file at the root already holds the run command: install, migrate, collect static files, seed if empty, then start gunicorn.
-2. In **Secrets**, set the following:
-   - `DJANGO_SECRET_KEY`: a long random string, which you can generate with `python -c "import secrets; print(secrets.token_urlsafe(50))"`
-   - `DJANGO_DEBUG=0`
-3. Click Run, then Deploy.
+1. In a **Bash console**, clone the repository and set it up (replace `<repo>` with the folder name `git clone` creates):
+   ```bash
+   git clone https://github.com/<you>/<repo>.git
+   mkvirtualenv --python=python3.10 grit
+   cd ~/<repo>/backend
+   pip install -r requirements.txt
+   python manage.py migrate
+   python manage.py collectstatic --noinput
+   python manage.py seed_demo
+   ```
+2. Open **Web → Add a new web app → Manual configuration → Python 3.10** and fill in:
+   - **Source code:** `/home/<username>/<repo>/backend`
+   - **Virtualenv:** `/home/<username>/.virtualenvs/grit`
+   - **Static files:** URL `/static/` → `/home/<username>/<repo>/backend/staticfiles`
+   - **Force HTTPS:** on
+3. Replace the **WSGI configuration file** with the block below, then click **Reload**:
+   ```python
+   import os, sys
+   path = "/home/<username>/<repo>/backend"
+   if path not in sys.path:
+       sys.path.insert(0, path)
+   os.environ["DJANGO_SETTINGS_MODULE"] = "grit.settings"
+   os.environ["DJANGO_DEBUG"] = "0"
+   os.environ["DJANGO_SECRET_KEY"] = "<long random string>"  # python -c "import secrets; print(secrets.token_urlsafe(50))"
+   os.environ["DJANGO_ALLOWED_HOSTS"] = "<username>.pythonanywhere.com"
+   os.environ["DJANGO_CSRF_TRUSTED_ORIGINS"] = "https://<username>.pythonanywhere.com"
+   os.environ["DJANGO_SSL_REDIRECT"] = "0"  # PythonAnywhere's "Force HTTPS" handles this
+   from django.core.wsgi import get_wsgi_application
+   application = get_wsgi_application()
+   ```
 
-The same commands work on any host that runs Python (Render, Railway, an EC2 box).
+To update later, run `git pull` in the console and click **Reload**. The same settings work on any host that runs Python behind a WSGI server.
 
 | Env var | Default | Purpose |
 |---|---|---|
 | `DJANGO_SECRET_KEY` | dev key | **Required** when `DJANGO_DEBUG=0` |
 | `DJANGO_DEBUG` | `1` | `0` in production (secure cookies, HTTPS redirect, HSTS) |
-| `DJANGO_ALLOWED_HOSTS` | localhost, Replit domains | Comma-separated host names |
+| `DJANGO_ALLOWED_HOSTS` | localhost, PythonAnywhere | Comma-separated host names |
 | `GRIT_DEMO_MODE` | `1` | Demo login, simulated clock and reset. **Set to `0` for real students.** |
 | `POSTGRES_DB` / `_USER` / `_PASSWORD` / `_HOST` | not set | Use Postgres instead of SQLite (also install `psycopg`) |
 

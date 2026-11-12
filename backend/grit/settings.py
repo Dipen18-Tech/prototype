@@ -1,7 +1,7 @@
 """Django settings for the GRIT interview scheduling backend.
 
 Everything environment-specific comes from env vars so the same code runs locally,
-on Replit, or behind a real web server.
+on PythonAnywhere, or behind any WSGI server.
 """
 import os
 from pathlib import Path
@@ -15,8 +15,8 @@ def env_list(name, default=""):
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-only-insecure-key-change-me")
 DEBUG = os.environ.get("DJANGO_DEBUG", "1") == "1"
-ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,.replit.dev,.replit.app,.repl.co")
-CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS", "https://*.replit.dev,https://*.replit.app,https://*.repl.co")
+ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,.pythonanywhere.com")
+CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS", "https://*.pythonanywhere.com")
 
 # Demo mode: quick persona login, simulated clock and data reset. MUST be off for real students.
 DEMO_MODE = os.environ.get("GRIT_DEMO_MODE", "1") == "1"
